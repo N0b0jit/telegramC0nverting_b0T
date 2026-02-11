@@ -1,5 +1,7 @@
 import os
 import logging
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Optional
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
@@ -16,7 +18,7 @@ import pytesseract
 from rembg import remove
 from pdf2docx import Converter
 import img2pdf
-from moviepy import VideoFileClip
+from moviepy.video.io.VideoFileClip import VideoFileClip
 from docx2pdf import convert
 
 # Load environment variables
@@ -29,6 +31,20 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+# Health check server for free hosting (Koyeb/Render)
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(b"Bot is running!")
+
+def start_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+    logger.info(f"Health check server started on port {port}")
+    server.serve_forever()
 
 TEMP_DIR = "temp_files"
 if not os.path.exists(TEMP_DIR):
@@ -62,26 +78,38 @@ def mark_verified(user_id: int) -> None:
             f.write(f"{user_id_str}\n")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handles the /start command and verification gate."""
+    """Handles the /start command and verification gate with a user-friendly UI."""
     user_id = update.effective_user.id
+    user_name = update.effective_user.first_name
+    
     if is_verified(user_id):
         await update.message.reply_text(
-            "🚀 *Welcome to the Ultimate Converter!*\n\n"
-            "The bot is fully unlocked! Send me any file, image, or link to begin.",
+            f"� *Welcome Back, {user_name}!* ✨\n\n"
+            "This is your *Personal Infinity Converter*. I am ready for any task!\n\n"
+            "📥 *What can I do for you today?*\n"
+            "— Send a **PDF** or **Docx** for documents\n"
+            "— Send a **Photo** for image tools & OCR\n"
+            "— Send a **Video** for GIF/MP3 extraction\n"
+            "— Send any **Link** to capture as PDF\n"
+            "— Send plain **Text** to get a Voice Note\n\n"
+            "Just drop a file below! 👇",
             parse_mode='Markdown'
         )
     else:
         keyboard = [
-            [InlineKeyboardButton("Facebook 👍", url="https://www.facebook.com/nobojit.majumder.2024")],
-            [InlineKeyboardButton("Instagram 📸", url="https://www.instagram.com/mr_nobojit.m/")],
-            [InlineKeyboardButton("TikTok 🎵", url="https://www.tiktok.com/@nobojitnexus")],
-            [InlineKeyboardButton("YouTube 📺", url="https://www.youtube.com/@NobojitNexus")],
-            [InlineKeyboardButton("✅ I HAVE FOLLOWED & SUBSCRIBED", callback_data="verify_me")]
+            [InlineKeyboardButton("1️⃣ Follow Facebook 👍", url="https://www.facebook.com/nobojit.majumder.2024")],
+            [InlineKeyboardButton("2️⃣ Follow Instagram 📸", url="https://www.instagram.com/mr_nobojit.m/")],
+            [InlineKeyboardButton("3️⃣ Follow TikTok 🎵", url="https://www.tiktok.com/@nobojitnexus")],
+            [InlineKeyboardButton("4️⃣ Subscribe YouTube 📺", url="https://www.youtube.com/@NobojitNexus")],
+            [InlineKeyboardButton("🚀 UNLOCK ALL FEATURES", callback_data="verify_me")]
         ]
         await update.message.reply_text(
-            "🔒 *Verification Required!*\n\n"
-            "To use this bot for free forever, please follow and subscribe to my profiles below:\n\n"
-            "Once done, click the **Verify** button to unlock all features!",
+            f"� *Hello {user_name}! Welcome to the Ultimate Converter!* 🚀\n\n"
+            "I can convert almost any file for you, but first, I need a small favor to keep this service *100% FREE* and unlimited.\n\n"
+            "🛡️ *HOW TO UNLOCK IN 2 STEPS:* \n"
+            "1. Click the buttons below and follow/subscribe to my profiles.\n"
+            "2. Click the **'Unlock All Features'** button once you are done!\n\n"
+            "Thank you for supporting the developer! ❤️",
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode='Markdown'
         )
@@ -354,6 +382,9 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.VIDEO, handle_video))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
     app.add_handler(CallbackQueryHandler(button_callback))
+    
+    # Start health check server for hosting
+    threading.Thread(target=start_server, daemon=True).start()
     
     print("🚀 Bot is LIVE and optimized! 0 Errors Expected.")
     app.run_polling()
