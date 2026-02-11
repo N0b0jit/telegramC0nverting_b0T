@@ -8,18 +8,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 from PIL import Image
 from dotenv import load_dotenv
 
-# Third-party conversion libraries
-import wikipedia
-import pdfkit
-import qrcode
-from gtts import gTTS
-from pypdf import PdfReader, PdfWriter
-import pytesseract
-from rembg import remove
-from pdf2docx import Converter
-import img2pdf
-from moviepy.video.io.VideoFileClip import VideoFileClip
-from docx2pdf import convert
+# Third-party conversion libraries (Imported inside main for faster port-binding)
+# wikipedia, pdfkit, qrcode, gTTS, pypdf, pytesseract, rembg, pdf2docx, img2pdf, moviepy, docx2pdf
 
 # Load environment variables
 load_dotenv()
@@ -369,10 +359,29 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             except Exception: pass
 
 if __name__ == '__main__':
+    # 1. Start health check server IMMEDIATELY for Render.com/Koyeb
+    # This must happen before heavy imports to avoid port-binding timeout
+    threading.Thread(target=start_server, daemon=True).start()
+    
     if not TOKEN:
-        print("Error: TELEGRAM_BOT_TOKEN not found in .env file!")
+        print("❌ Error: TELEGRAM_BOT_TOKEN not found!")
+        print("🔧 If hosting on Render/Koyeb, add it to 'Environment Variables' in the dashboard.")
         exit(1)
-        
+
+    # 2. Heavy Imports (Now loading while the port is already open)
+    print("📦 Loading heavy libraries... Please wait.")
+    import wikipedia
+    import pdfkit
+    import qrcode
+    from gtts import gTTS
+    from pypdf import PdfReader, PdfWriter
+    import pytesseract
+    from rembg import remove
+    from pdf2docx import Converter
+    import img2pdf
+    from moviepy.video.io.VideoFileClip import VideoFileClip
+    from docx2pdf import convert
+
     app = ApplicationBuilder().token(TOKEN).build()
     
     # Register handlers
@@ -382,9 +391,6 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.VIDEO, handle_video))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
     app.add_handler(CallbackQueryHandler(button_callback))
-    
-    # Start health check server for hosting
-    threading.Thread(target=start_server, daemon=True).start()
     
     print("🚀 Bot is LIVE and optimized! 0 Errors Expected.")
     app.run_polling()
