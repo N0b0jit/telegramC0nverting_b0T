@@ -1,39 +1,41 @@
-# Deploying your Telegram Bot for FREE 🚀
+# Hosting your Bot for FREE (No Trial, No Card) 🚀
 
-To host this bot 24/7 without paying any money or using a trial, the best platform right now is **Koyeb**.
+If Koyeb is asking for a trial, use **Render.com**. It is 100% free and does not require a credit card.
 
 ## 1. Prepare your GitHub
-Make sure all your code (including `requirements.txt`, `Procfile`, and `bot.py`) is pushed to your GitHub repository:
+Make sure all your code is pushed to your GitHub repository:
 `https://github.com/N0b0jit/telegramC0nverting_b0T.git`
 
-## 2. Sign up on Koyeb
-1. Go to [Koyeb.com](https://www.koyeb.com/) and create a free account.
-2. You don't need a credit card for the "Nano" instance.
+## 2. Sign up on Render.com
+1. Go to [Render.com](https://render.com/) and create a free account.
+2. You don't need a credit card.
 
 ## 3. Create a New Service
-1. Click **"Create Service"**.
-2. Select **GitHub** as the deployment method.
-3. Connect your GitHub account and select your `telegramC0nverting_b0T` repository.
+1. Click **"New +"** and select **"Web Service"**.
+2. Connect your GitHub and select your repository.
+3. **Instance Type**: Select **"Free"** ($0/month).
+4. **Build Command**: `pip install -r requirements.txt`
+5. **Start Command**: `python bot.py`
 
-## 4. Configure the Deployment
-- **Branch**: `main`
-- **Instance Type**: Select **"Nano"** (This is the free one).
-- **Service Type**: Select **"Web Service"** (Even though it's a bot).
-- **Environment Variables**:
-  - Click **"Add Variable"**.
-  - Name: `TELEGRAM_BOT_TOKEN`
-  - Value: `YOUR_ACTUAL_BOT_TOKEN_HERE`
+## 4. Set Environment Variables
+1. Go to the **"Environment"** tab.
+2. Click **"Add Environment Variable"**.
+3. Key: `TELEGRAM_BOT_TOKEN`
+4. Value: `YOUR_BOT_TOKEN`
 
-## 5. Important: The "Sleep" Workaround
-Because we are using a "Web Service" (to get it for free), Koyeb expects a port to be open. To prevent the bot from crashing, we need to add 3 lines of code to create a "Fake Web Server".
+## 5. CRITICAL: Keep it Awake (24/7)
+Render's free tier "sleeps" if nobody visits the web address. To keep your bot running forever:
+1. Go to [Cron-job.org](https://cron-job.org/).
+2. Create a free account.
+3. Create a new **Cronjob**.
+4. **URL**: Enter the URL Render gives you (e.g., `https://your-bot.onrender.com`).
+5. **Execution**: Set it to run every **14 minutes**.
 
-## 6. Deployment Command
-Koyeb will automatically see your `Procfile` and run `python bot.py`.
+This will "ping" your bot and keep it 100% online without it ever stopping.
 
 ---
 
-### Alternative: Render.com
-If you use **Render**, you must use a service like [cron-job.org](https://cron-job.org) to "ping" your bot URL every 10 minutes to keep it from sleeping.
-
-### Recommendation
-Start with **Koyeb**. It is significantly faster and more stable for Python bots.
+### Alternative: Serv00.com (Advanced)
+If you want a real Linux server for free:
+1. Register at [Serv00.com](https://www.serv00.com/).
+2. You get SSH access and Python support forever for free.
