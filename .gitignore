@@ -1,0 +1,7 @@
+.env
+temp_files/
+__pycache__/
+*.pyc
+venv/
+.venv/
+verified_users.txt
